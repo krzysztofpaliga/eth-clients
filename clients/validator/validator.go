@@ -2,10 +2,10 @@ package validator
 
 import (
 	"fmt"
-	"github.com/krzysztofpaliga/eth-clients/clients"
+	"github.com/marioevz/eth-clients/clients"
 
-	"github.com/krzysztofpaliga/eth-clients/clients/beacon"
-	"github.com/krzysztofpaliga/eth-clients/clients/utils"
+	"github.com/marioevz/eth-clients/clients/beacon"
+	"github.com/marioevz/eth-clients/clients/utils"
 	blsu "github.com/protolambda/bls12-381-util"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"

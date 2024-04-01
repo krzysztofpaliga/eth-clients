@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/krzysztofpaliga/eth-clients/clients/beacon"
-	"github.com/krzysztofpaliga/eth-clients/clients/execution"
-	"github.com/krzysztofpaliga/eth-clients/clients/utils"
-	"github.com/krzysztofpaliga/eth-clients/clients/validator"
+	"github.com/marioevz/eth-clients/clients/beacon"
+	"github.com/marioevz/eth-clients/clients/execution"
+	"github.com/marioevz/eth-clients/clients/utils"
+	"github.com/marioevz/eth-clients/clients/validator"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 )
