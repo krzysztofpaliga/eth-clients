@@ -250,6 +250,29 @@ func (en *ExecutionClient) Init(ctx context.Context) error {
 
 			en.proxy = p
 		}
+
+		httpClient := &http.Client{}
+
+		userRPCAddress, err = en.UserRPCAddress()
+		if err != nil {
+			panic(err)
+		}
+		ethRpcClient, err := rpc.DialHTTPWithClient(userRPCAddress, httpClient)
+		if err != nil {
+			panic(err)
+		}
+		ethClient := ethclient.NewClient(ethRpcClient)
+		for {
+			result, err := ethClient.SyncProgress(ctx)
+			if result == nil && err == nil {
+				en.Logf("INFO: Waiting for Execution Layer sync: %s synced", en.Client.GetHost())
+				break
+			}
+
+			// Wait for 3 seconds before the next iteration
+			en.Logf("INFO: Waiting for Execution Layer sync: %s is stil syncing", en.Client.GetHost())
+			time.Sleep(3 * time.Second)
+		}
 	}
 	return nil
 }

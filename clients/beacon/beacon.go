@@ -3,9 +3,11 @@ package beacon
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -77,7 +79,63 @@ func (bn *BeaconClient) Start() error {
 	return bn.Init(context.Background())
 }
 
+type SyncingResponse struct {
+	Data struct {
+		HeadSlot     string `json:"head_slot"`
+		SyncDistance string `json:"sync_distance"`
+		IsSyncing    bool   `json:"is_syncing"`
+	} `json:"data"`
+}
+
 func (bn *BeaconClient) Init(ctx context.Context) error {
+	for {
+		ip := bn.Client.GetIP()
+
+		resp, err := http.Get(fmt.Sprintf("http://%s:4000/eth/v1/node/syncing", ip.String()))
+		if err != nil {
+			bn.Logf("Error making the request: %v\n", err)
+			return err
+		}
+		defer resp.Body.Close()
+
+		// Decode the JSON response
+		var syncResp SyncingResponse
+		if err := json.NewDecoder(resp.Body).Decode(&syncResp); err != nil {
+			bn.Logf("Error decoding JSON response: %v\n", err)
+			return err
+		}
+
+		// Convert HeadSlot and SyncDistance to integers for comparison
+		headSlot, err := strconv.Atoi(syncResp.Data.HeadSlot)
+		if err != nil {
+			bn.Logf("Error converting head_slot to integer: %v\n", err)
+			return err
+		}
+		syncDistance, err := strconv.Atoi(syncResp.Data.SyncDistance)
+		if err != nil {
+			bn.Logf("Error converting sync_distance to integer: %v\n", err)
+			return err
+		}
+
+		// Perform the assertions
+		if headSlot <= 0 {
+			bn.Logf("Expected head_slot to be greater than 0, got %d", headSlot)
+		}
+		if syncDistance != 0 {
+			bn.Logf("Expected sync_distance to be 0, got %d", syncDistance)
+		}
+		if syncResp.Data.IsSyncing {
+			bn.Logf("Expected is_syncing to be false, is true")
+		}
+
+		if headSlot > 0 && syncDistance == 0 && !syncResp.Data.IsSyncing {
+			bn.Logf("INFO: Waiting for Beacon Node sync: %s synced", bn.Client.GetHost())
+			break
+		} else {
+			bn.Logf("INFO: Waiting for Beacon Node sync: %s is stil syncing", bn.Client.GetHost())
+			time.Sleep(3 * time.Second)
+		}
+	}
 	if bn.api == nil {
 		port := bn.Config.BeaconAPIPort
 		if port == 0 {
