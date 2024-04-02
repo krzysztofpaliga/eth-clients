@@ -263,6 +263,17 @@ func (en *ExecutionClient) Init(ctx context.Context) error {
 		}
 		ethClient := ethclient.NewClient(ethRpcClient)
 		for {
+			result, err := ethClient.BlockNumber(ctx)
+			if result > 0 && err == nil {
+				en.Logf("INFO: Finished Waiting for Execution Layer Block Number progress: %s BlockNumber is %d", en.Client.GetHost(), result)
+				break
+			}
+
+			// Wait for 3 seconds before the next iteration
+			en.Logf("INFO: Waiting for Execution Layer Block Number progress: %s BlockNumber is stil %d", en.Client.GetHost(), result)
+			time.Sleep(3 * time.Second)
+		}
+		for {
 			result, err := ethClient.SyncProgress(ctx)
 			if result == nil && err == nil {
 				en.Logf("INFO: Waiting for Execution Layer sync: %s synced", en.Client.GetHost())
